@@ -8,7 +8,7 @@ import { useNotes, type AISettings } from "@/lib/notes-context";
 import { trpc } from "@/lib/trpc";
 
 const providers: { id: AISettings["provider"]; label: string; detail: string; defaultModel: string }[] = [
-  { id: "managed", label: "NoteNest AI", detail: "Managed, private, no key required", defaultModel: "auto" },
+  { id: "managed", label: "Mindloom AI", detail: "Managed, private, no key required", defaultModel: "auto" },
   { id: "openai", label: "OpenAI", detail: "Bring your own API key", defaultModel: "gpt-4o-mini" },
   { id: "anthropic", label: "Anthropic", detail: "Bring your own API key", defaultModel: "claude-3-5-sonnet" },
   { id: "google", label: "Google AI", detail: "Bring your own API key", defaultModel: "gemini-2.0-flash" },
@@ -40,7 +40,7 @@ export default function SettingsScreen() {
   const saveSettings = () => setAISettings({ provider: selectedProvider, model: model.trim() || "auto", apiKeyLabel: apiKey ? "Stored securely" : aiSettings.apiKeyLabel });
   const saveKey = async () => {
     if (!apiKey.trim() || selectedProvider === "managed") return;
-    await SecureStore.setItemAsync(`notenest.ai.${selectedProvider}.key`, apiKey.trim());
+    await SecureStore.setItemAsync(`mindloom.ai.${selectedProvider}.key`, apiKey.trim());
     setApiKey("");
     setKeySaved(true);
     saveSettings();
@@ -51,7 +51,7 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}><View><Text style={[styles.eyebrow, { color: colors.primary }]}>PERSONALIZE YOUR SPACE</Text><Text style={[styles.heading, { color: colors.foreground }]}>Settings</Text></View><View style={[styles.avatar, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="settings" size={20} color={colors.primary} /></View></View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>AI assistant</Text>
-        <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose how NoteNest helps you think. The managed assistant works immediately; provider keys are stored on-device in the secure keychain.</Text>
+          <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose how Mindloom helps you think. The managed assistant works immediately; provider keys are stored on-device in the secure keychain.</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}><View style={[styles.aiIcon, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="sparkles" size={19} color={colors.primary} /></View><View style={styles.cardHeaderCopy}><Text style={[styles.cardTitle, { color: colors.foreground }]}>Writing partner</Text><Text style={[styles.cardCaption, { color: colors.muted }]}>{providers.find((provider) => provider.id === selectedProvider)?.detail}</Text></View><View style={[styles.statusDot, { backgroundColor: colors.success }]} /></View>
           {providers.map((provider) => <Pressable key={provider.id} onPress={() => selectProvider(provider.id)} style={({ pressed }) => [styles.providerRow, { borderTopColor: colors.border }, pressed && styles.pressed]}><View style={[styles.radio, { borderColor: selectedProvider === provider.id ? colors.primary : colors.border }]}>{selectedProvider === provider.id && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}</View><View style={styles.providerCopy}><Text style={[styles.providerLabel, { color: colors.foreground }]}>{provider.label}</Text><Text style={[styles.providerDetail, { color: colors.muted }]}>{provider.detail}</Text></View>{provider.id === "managed" && <Text style={[styles.recommended, { color: colors.primary }]}>Recommended</Text>}</Pressable>)}
@@ -63,8 +63,8 @@ export default function SettingsScreen() {
           {selectedProvider !== "managed" && <><Text style={[styles.fieldHint, { color: colors.muted }]}>API key</Text><View style={styles.keyRow}><TextInput value={apiKey} onChangeText={setApiKey} placeholder={aiSettings.apiKeyLabel ?? "Paste a key (stored securely)"} placeholderTextColor={colors.muted} style={[styles.input, styles.keyInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]} secureTextEntry autoCapitalize="none" /><Pressable onPress={saveKey} style={({ pressed }) => [styles.saveKey, { backgroundColor: colors.primary }, pressed && styles.pressed]}><Text style={styles.saveKeyText}>Save</Text></Pressable></View>{keySaved && <Text style={[styles.savedText, { color: colors.success }]}>Key stored securely on this device.</Text>}</>}
           <Pressable onPress={saveSettings} style={({ pressed }) => [styles.saveSettings, { backgroundColor: `${colors.primary}12` }, pressed && styles.pressed]}><Text style={[styles.saveSettingsText, { color: colors.primary }]}>Use this setup</Text></Pressable>
         </View>
-        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="lock" size={17} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>NoteNest is local-first. Notes are stored on this device, and AI requests are only sent when you tap an assistant action.</Text></View>
-        <Text style={[styles.footer, { color: colors.muted }]}>NoteNest AI · an open, extensible notes workspace</Text>
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="lock" size={17} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Mindloom is local-first. Notes are stored on this device, and AI requests are only sent when you tap an assistant action.</Text></View>
+        <Text style={[styles.footer, { color: colors.muted }]}>Mindloom AI · an open, extensible thinking workspace</Text>
       </ScrollView>
     </ScreenContainer>
   );

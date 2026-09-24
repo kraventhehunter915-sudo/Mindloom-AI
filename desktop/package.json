@@ -1,0 +1,21 @@
+{
+  "name": "mindloom-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mindloom AI desktop workspace for connected thinking.",
+  "author": {
+    "name": "Mindloom contributors",
+    "email": "hello@mindloom.ai"
+  },
+  "homepage": "https://github.com/mindloom-ai/mindloom",
+  "desktopName": "mindloom-ai",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder --config electron-builder.yml"
+  },
+  "devDependencies": {
+    "electron": "^38.1.0",
+    "electron-builder": "^26.0.12"
+  }
+}

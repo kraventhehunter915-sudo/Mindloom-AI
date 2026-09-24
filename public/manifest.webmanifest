@@ -1,0 +1,13 @@
+{
+  "name": "Mindloom AI",
+  "short_name": "Mindloom",
+  "description": "A calm, connected workspace for notes, ideas, and AI-assisted thinking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F5F0",
+  "theme_color": "#34785C",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/assets/images/icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

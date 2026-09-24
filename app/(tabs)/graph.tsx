@@ -34,7 +34,7 @@ export default function GraphScreen() {
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR KNOWLEDGE MAP</Text>
+          <Text style={[styles.eyebrow, { color: colors.primary }]}>MINDLOOM / KNOWLEDGE MAP</Text>
           <Text style={[styles.heading, { color: colors.foreground }]}>Graph</Text>
         </View>
         <View style={[styles.statPill, { backgroundColor: colors.surface, borderColor: colors.border }]}>

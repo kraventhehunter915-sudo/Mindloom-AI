@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -8,6 +8,8 @@ import { useColors } from "@/hooks/use-colors";
 export default function TabLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const desktop = Platform.OS === "web" && width >= 900;
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   return (
     <Tabs screenOptions={{
@@ -15,7 +17,8 @@ export default function TabLayout() {
       tabBarInactiveTintColor: colors.muted,
       headerShown: false,
       tabBarButton: HapticTab,
-      tabBarStyle: { paddingTop: 8, paddingBottom: bottomPadding, height: 56 + bottomPadding, backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 0.5 },
+      tabBarPosition: desktop ? "left" : "bottom",
+      tabBarStyle: desktop ? { width: 88, paddingTop: 20, backgroundColor: colors.surface, borderRightColor: colors.border, borderRightWidth: 1 } : { paddingTop: 8, paddingBottom: bottomPadding, height: 56 + bottomPadding, backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 0.5 },
       tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
     }}>
       <Tabs.Screen name="index" options={{ title: "Notes", tabBarIcon: ({ color }) => <IconSymbol size={23} name="note.text" color={color} /> }} />

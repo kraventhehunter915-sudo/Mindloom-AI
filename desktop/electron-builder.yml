@@ -1,0 +1,28 @@
+appId: ai.mindloom.desktop
+productName: Mindloom AI
+artifactName: Mindloom-${version}-${os}-${arch}.${ext}
+icon: ../assets/images/icon.png
+compression: maximum
+asar: true
+files:
+  - main.cjs
+  - preload.cjs
+  - package.json
+  - renderer/**/*
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+win:
+  target:
+    - nsis
+    - portable
+linux:
+  category: Office
+  icon: ../assets/images/icon.png
+  maintainer: hello@mindloom.ai
+  target:
+    - AppImage
+    - deb
+    - tar.gz

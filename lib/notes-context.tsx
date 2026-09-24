@@ -32,13 +32,13 @@ type NotesContextValue = {
   getOutgoingLinks: (content: string) => string[];
 };
 
-const NOTES_KEY = "notenest.notes.v1";
-const AI_KEY = "notenest.ai-settings.v1";
+const NOTES_KEY = "mindloom.notes.v1";
+const AI_KEY = "mindloom.ai-settings.v1";
 
 const starterNotes: Note[] = [
   {
     id: "welcome",
-    title: "Welcome to NoteNest",
+    title: "Welcome to Mindloom",
     content:
       "A quiet place for connected thinking.\n\nTry linking ideas with [[Design system]] or [[Reading list]]. Add #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
     tags: ["welcome", "guide"],
@@ -51,7 +51,7 @@ const starterNotes: Note[] = [
     id: "design-system",
     title: "Design system",
     content:
-      "A small visual language for NoteNest: warm paper, ink, and a single green accent.\n\nPrinciples\n- Make capture feel immediate\n- Keep AI actions close to the cursor\n- Prefer calm hierarchy over chrome\n\nSee also: [[Welcome to NoteNest]] and [[Reading list]]",
+      "A small visual language for Mindloom: warm paper, ink, and a single green accent.\n\nPrinciples\n- Make capture feel immediate\n- Keep AI actions close to the cursor\n- Prefer calm hierarchy over chrome\n\nSee also: [[Welcome to Mindloom]] and [[Reading list]]",
     tags: ["product", "design"],
     folder: "Projects",
     pinned: false,

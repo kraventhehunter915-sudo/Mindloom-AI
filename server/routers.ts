@@ -38,7 +38,7 @@ export const appRouter = router({
           model: input.model && input.model !== "auto" ? input.model : undefined,
           maxTokens: 600,
           messages: [
-            { role: "system", content: "You are the NoteNest writing partner. Be concise, thoughtful, and useful. Return only the requested result, with no preamble." },
+            { role: "system", content: "You are the Mindloom writing partner. Be concise, thoughtful, and useful. Return only the requested result, with no preamble." },
             { role: "user", content: `${actionPrompts[input.action]}\n\nTitle: ${input.title}\n\nNote:\n${input.content}` },
           ],
         });

@@ -1,6 +1,6 @@
 {
-  "name": "app-template",
-  "version": "1.0.0",
+  "name": "mindloom-ai",
+  "version": "0.1.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -16,7 +16,11 @@
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "qr": "node scripts/generate_qr.mjs"
+    "qr": "node scripts/generate_qr.mjs",
+    "export:web": "expo export --platform web",
+    "desktop:install": "cd desktop && pnpm install",
+    "desktop:dev": "pnpm export:web && rm -rf desktop/renderer && cp -R dist desktop/renderer && cd desktop && pnpm run start",
+    "desktop:package": "pnpm export:web && rm -rf desktop/renderer && cp -R dist desktop/renderer && cd desktop && pnpm run package"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

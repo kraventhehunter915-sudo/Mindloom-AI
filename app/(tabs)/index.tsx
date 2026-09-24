@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
+import { WorkspaceFrame } from "@/components/workspace-frame";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { getPreview, useNotes, type Note } from "@/lib/notes-context";
@@ -15,27 +16,12 @@ const formatDate = (date: string) => {
 
 function NoteCard({ note, onPress, onPin }: { note: Note; onPress: () => void; onPin: () => void }) {
   const colors = useColors();
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
-      <View style={styles.cardTop}>
-        <View style={styles.folderRow}>
-          <IconSymbol name="folder" size={14} color={colors.muted} />
-          <Text style={[styles.folder, { color: colors.muted }]}>{note.folder}</Text>
-        </View>
-        <Pressable onPress={onPin} hitSlop={10} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-          <IconSymbol name={note.pinned ? "pin" : "pin-outline"} size={17} color={note.pinned ? colors.primary : colors.muted} />
-        </Pressable>
-      </View>
-      <Text style={[styles.cardTitle, { color: colors.foreground }]} numberOfLines={1}>{note.title}</Text>
-      <Text style={[styles.preview, { color: colors.muted }]} numberOfLines={2}>{getPreview(note.content) || "Start writing your next thought…"}</Text>
-      <View style={styles.cardBottom}>
-        <View style={styles.tagsRow}>
-          {note.tags.slice(0, 2).map((tag) => <Text key={tag} style={[styles.tag, { color: colors.primary, backgroundColor: `${colors.primary}15` }]}>#{tag}</Text>)}
-        </View>
-        <Text style={[styles.date, { color: colors.muted }]}>{formatDate(note.updatedAt)}</Text>
-      </View>
-    </Pressable>
-  );
+  return <Pressable onPress={onPress} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+    <View style={styles.cardTop}><View style={styles.folderRow}><IconSymbol name="folder" size={14} color={colors.muted} /><Text style={[styles.folder, { color: colors.muted }]}>{note.folder}</Text></View><Pressable onPress={onPin} hitSlop={10} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}><IconSymbol name={note.pinned ? "pin" : "pin-outline"} size={17} color={note.pinned ? colors.primary : colors.muted} /></Pressable></View>
+    <Text style={[styles.cardTitle, { color: colors.foreground }]} numberOfLines={1}>{note.title}</Text>
+    <Text style={[styles.preview, { color: colors.muted }]} numberOfLines={2}>{getPreview(note.content) || "Start writing your next thought…"}</Text>
+    <View style={styles.cardBottom}><View style={styles.tagsRow}>{note.tags.slice(0, 2).map((tag) => <Text key={tag} style={[styles.tag, { color: colors.primary, backgroundColor: `${colors.primary}15` }]}>#{tag}</Text>)}</View><Text style={[styles.date, { color: colors.muted }]}>{formatDate(note.updatedAt)}</Text></View>
+  </Pressable>;
 }
 
 export default function HomeScreen() {
@@ -44,81 +30,39 @@ export default function HomeScreen() {
   const { notes, createNote, togglePin, isHydrated } = useNotes();
   const [query, setQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const filteredNotes = useMemo(() => { const normalized = query.trim().toLowerCase(); if (!normalized) return notes; return notes.filter((note) => `${note.title} ${note.content} ${note.tags.join(" ")}`.toLowerCase().includes(normalized)); }, [notes, query]);
+  const handleNewNote = () => { const note = createNote(); router.push({ pathname: "/note/[id]", params: { id: note.id } }); };
 
-  const filteredNotes = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return notes;
-    return notes.filter((note) => `${note.title} ${note.content} ${note.tags.join(" ")}`.toLowerCase().includes(normalized));
-  }, [notes, query]);
-
-  const handleNewNote = () => {
-    const note = createNote();
-    router.push({ pathname: "/note/[id]", params: { id: note.id } });
-  };
-
-  return (
-    <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR SPACE</Text>
-          <Text style={[styles.heading, { color: colors.foreground }]}>Notes</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <Pressable onPress={() => setShowSearch((value) => !value)} style={({ pressed }) => [styles.roundButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
-            <IconSymbol name="search" size={20} color={colors.foreground} />
-          </Pressable>
-          <Pressable onPress={handleNewNote} style={({ pressed }) => [styles.addButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}>
-            <IconSymbol name="add" size={23} color="#FFFFFF" />
-          </Pressable>
-        </View>
-      </View>
-
-      {showSearch && <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <IconSymbol name="search" size={18} color={colors.muted} />
-        <TextInput value={query} onChangeText={setQuery} autoFocus placeholder="Search notes, tags, ideas…" placeholderTextColor={colors.muted} style={[styles.searchInput, { color: colors.foreground }]} returnKeyType="search" />
-        {query.length > 0 && <Pressable onPress={() => setQuery("")}><IconSymbol name="close" size={17} color={colors.muted} /></Pressable>}
-      </View>}
-
-      <View style={styles.subhead}>
-        <View>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>All notes</Text>
-          <Text style={[styles.sectionMeta, { color: colors.muted }]}>{isHydrated ? `${filteredNotes.length} ${filteredNotes.length === 1 ? "note" : "notes"}` : "Loading your space…"}</Text>
-        </View>
-        <Pressable onPress={() => router.push("/graph")} style={({ pressed }) => [styles.graphChip, { backgroundColor: `${colors.primary}12` }, pressed && styles.pressed]}>
-          <IconSymbol name="share" size={15} color={colors.primary} />
-          <Text style={[styles.graphChipText, { color: colors.primary }]}>View graph</Text>
-        </Pressable>
-      </View>
-
-      <FlatList
-        data={filteredNotes}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <NoteCard note={item} onPress={() => router.push({ pathname: "/note/[id]", params: { id: item.id } })} onPin={() => togglePin(item.id)} />}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.foreground }]}>No notes match that search</Text><Text style={[styles.emptyCopy, { color: colors.muted }]}>Try a title, tag, or a word from the note.</Text></View>}
-      />
-    </ScreenContainer>
-  );
+  return <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
+    <WorkspaceFrame>
+      <View style={styles.header}><View style={styles.brandCluster}><View style={[styles.brandMark, { backgroundColor: colors.primary }]}><Text style={styles.brandMarkText}>M</Text></View><View><Text style={[styles.eyebrow, { color: colors.primary }]}>MINDLOOM / PERSONAL SPACE</Text><Text style={[styles.heading, { color: colors.foreground }]}>Notes</Text></View></View><View style={styles.headerActions}><Pressable onPress={() => setShowSearch((value) => !value)} style={({ pressed }) => [styles.roundButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}><IconSymbol name="search" size={20} color={colors.foreground} /></Pressable><Pressable onPress={handleNewNote} style={({ pressed }) => [styles.addButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}><IconSymbol name="add" size={23} color="#FFFFFF" /></Pressable></View></View>
+      {showSearch && <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="search" size={18} color={colors.muted} /><TextInput value={query} onChangeText={setQuery} autoFocus placeholder="Search notes, tags, ideas…" placeholderTextColor={colors.muted} style={[styles.searchInput, { color: colors.foreground }]} returnKeyType="search" />{query.length > 0 && <Pressable onPress={() => setQuery("")}><IconSymbol name="close" size={17} color={colors.muted} /></Pressable>}</View>}
+      <View style={styles.subhead}><View><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Your library</Text><Text style={[styles.sectionMeta, { color: colors.muted }]}>{isHydrated ? `${filteredNotes.length} ${filteredNotes.length === 1 ? "note" : "notes"} · all thoughts in one place` : "Loading your space…"}</Text></View><Pressable onPress={() => router.push("/graph")} style={({ pressed }) => [styles.graphChip, { backgroundColor: `${colors.primary}12` }, pressed && styles.pressed]}><IconSymbol name="share" size={15} color={colors.primary} /><Text style={[styles.graphChipText, { color: colors.primary }]}>Open graph</Text></Pressable></View>
+      <FlatList data={filteredNotes} keyExtractor={(item) => item.id} renderItem={({ item }) => <NoteCard note={item} onPress={() => router.push({ pathname: "/note/[id]", params: { id: item.id } })} onPin={() => togglePin(item.id)} />} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} ListEmptyComponent={<View style={styles.empty}><Text style={[styles.emptyTitle, { color: colors.foreground }]}>No notes match that search</Text><Text style={[styles.emptyCopy, { color: colors.muted }]}>Try a title, tag, or a word from the note.</Text></View>} />
+    </WorkspaceFrame>
+  </ScreenContainer>;
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 16, paddingBottom: 18 },
-  eyebrow: { fontSize: 11, letterSpacing: 1.6, fontWeight: "800", marginBottom: 5 },
-  heading: { fontSize: 34, lineHeight: 40, fontWeight: "800", letterSpacing: -0.8 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 22, paddingBottom: 22 },
+  brandCluster: { flexDirection: "row", alignItems: "center", gap: 12 },
+  brandMark: { width: 40, height: 40, borderRadius: 13, alignItems: "center", justifyContent: "center", shadowColor: "#0B3D2A", shadowOpacity: 0.18, shadowRadius: 10, elevation: 3 },
+  brandMarkText: { color: "#FFFFFF", fontSize: 20, fontWeight: "800" },
+  eyebrow: { fontSize: 10, letterSpacing: 1.5, fontWeight: "800", marginBottom: 4 },
+  heading: { fontSize: 35, lineHeight: 40, fontWeight: "800", letterSpacing: -0.9 },
   headerActions: { flexDirection: "row", gap: 9, alignItems: "center" },
-  roundButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, justifyContent: "center", alignItems: "center" },
-  addButton: { width: 42, height: 42, borderRadius: 21, justifyContent: "center", alignItems: "center" },
+  roundButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, justifyContent: "center", alignItems: "center", shadowColor: "#1D2620", shadowOpacity: 0.04, shadowRadius: 8, elevation: 1 },
+  addButton: { width: 42, height: 42, borderRadius: 14, justifyContent: "center", alignItems: "center", shadowColor: "#2D6A4F", shadowOpacity: 0.2, shadowRadius: 10, elevation: 3 },
   pressed: { opacity: 0.72, transform: [{ scale: 0.97 }] },
-  searchBar: { borderWidth: 1, borderRadius: 15, minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 9, marginBottom: 18 },
+  searchBar: { borderWidth: 1, borderRadius: 15, minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 9, marginBottom: 18, shadowColor: "#1D2620", shadowOpacity: 0.05, shadowRadius: 16, elevation: 2 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 11 },
-  subhead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  sectionTitle: { fontSize: 18, fontWeight: "700" },
-  sectionMeta: { fontSize: 12, marginTop: 3 },
-  graphChip: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 16 },
+  subhead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  sectionTitle: { fontSize: 19, fontWeight: "700" },
+  sectionMeta: { fontSize: 12, marginTop: 4 },
+  graphChip: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 14 },
   graphChipText: { fontSize: 12, fontWeight: "700" },
-  listContent: { paddingBottom: 24, gap: 12 },
-  card: { borderWidth: 1, borderRadius: 18, padding: 16, minHeight: 146 },
+  listContent: { paddingBottom: 32, gap: 13 },
+  card: { borderWidth: 1, borderRadius: 20, padding: 17, minHeight: 146, shadowColor: "#1D2620", shadowOpacity: 0.055, shadowRadius: 18, elevation: 2 },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   folderRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   folder: { fontSize: 11, fontWeight: "600" },
