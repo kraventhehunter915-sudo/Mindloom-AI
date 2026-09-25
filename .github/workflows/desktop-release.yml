@@ -45,7 +45,7 @@ jobs:
           rm -rf desktop/renderer
           cp -R dist desktop/renderer
       - name: Install desktop dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: npx --yes pnpm@11.24.0 install --frozen-lockfile
         working-directory: desktop
       - name: Package desktop app
         run: pnpm run package
