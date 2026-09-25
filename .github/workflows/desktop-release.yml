@@ -32,6 +32,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Prepare NativeWind web cache
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'); const p='node_modules/react-native-css-interop/.cache/web.css'; fs.mkdirSync(require('path').dirname(p), { recursive: true }); fs.closeSync(fs.openSync(p, 'a'));"
       - run: pnpm exec expo export --platform web
         env:
           EXPO_PUBLIC_API_BASE_URL: ${{ vars.MINDLOOM_API_BASE_URL }}
