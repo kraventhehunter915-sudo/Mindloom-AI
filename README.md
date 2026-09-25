@@ -93,3 +93,5 @@ Mindloom supports the managed server-side assistant and optional secure bring-yo
 5. Create a release tag such as `v0.1.0` to build desktop installers and mobile binaries.
 
 See [`docs/RELEASES.md`](docs/RELEASES.md) for the staged release plan.
+
+See [`docs/MANUAL.md`](docs/MANUAL.md) for the complete user and developer manual, including every current note, graph, AI, privacy, troubleshooting, and release feature.
