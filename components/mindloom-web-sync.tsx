@@ -6,8 +6,15 @@ import { useNotes, type Note } from "@/lib/notes-context";
 export function MindloomWebSync({ children }: { children: React.ReactNode }) {
   const { notes, replaceNotes } = useNotes();
   const web = Platform.OS === "web";
-  const account = trpc.auth.me.useQuery(undefined, { enabled: web, retry: false, staleTime: 30_000 });
-  const remote = trpc.notes.list.useQuery(undefined, { enabled: web && !!account.data, retry: false });
+  const account = trpc.auth.me.useQuery(undefined, {
+    enabled: web,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const remote = trpc.notes.list.useQuery(undefined, {
+    enabled: web && !!account.data,
+    retry: false,
+  });
   const save = trpc.notes.save.useMutation();
   const remove = trpc.notes.remove.useMutation();
   const remoteApplied = useRef(false);
@@ -25,7 +32,8 @@ export function MindloomWebSync({ children }: { children: React.ReactNode }) {
     if (!web || !remoteApplied.current) return;
     const currentIds = new Set(notes.map((note) => note.id));
     for (const oldId of previousIds.current) {
-      if (!currentIds.has(oldId)) void remove.mutateAsync({ id: oldId }).catch(() => undefined);
+      if (!currentIds.has(oldId))
+        void remove.mutateAsync({ id: oldId }).catch(() => undefined);
     }
     for (const note of notes) {
       void save.mutateAsync(note).catch(() => undefined);

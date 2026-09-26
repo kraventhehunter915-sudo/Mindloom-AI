@@ -1,6 +1,8 @@
 # Mindloom AI
 
-Mindloom is a local-first notes workspace for connected thinking. It combines a calm glass-inspired interface, linked notes, graph navigation, search, tags, autosave, and an extensible AI writing partner.
+Mindloom is an account-backed notes workspace for connected thinking. It combines a calm glass-inspired interface, linked notes, graph navigation, search, tags, autosave, synchronized web notes, and an extensible AI writing partner.
+
+The website uses native email/password accounts only—no Google or Microsoft sign-in. The desktop workspace includes a source-grounded **Ask Mindloom** panel; protected AI requests resolve note sources server-side for the current account and return compact citations.
 
 The app is built with Expo SDK 54, React Native, Expo Router, TypeScript, NativeWind, tRPC, and the Manus-managed server runtime. It is designed to run as:
 
@@ -15,7 +17,7 @@ pnpm install
 pnpm dev
 ```
 
-The browser preview uses the Expo web target. Notes are stored locally with AsyncStorage. The managed AI route runs through the server and should not be called directly with a client-side secret.
+The browser preview uses the Expo web target. The website stores account notes through the authenticated database API while preserving local draft behavior; native clients remain local-first during this web-first release phase. The managed AI route runs through the server and should not be called directly with a client-side secret.
 
 ## Quality checks
 

@@ -1,6 +1,6 @@
 # Mindloom AI Manual
 
-Mindloom is a local-first notes workspace for connected thinking. It combines fast capture, linked notes, a knowledge graph, search, tags, pinning, autosave, and an optional AI writing partner.
+Mindloom is an account-based notes workspace for connected thinking. It combines fast capture, linked notes, a knowledge graph, search, tags, pinning, autosave, synchronized web notes, and an AI partner that answers from selected sources.
 
 ## 1. Product overview
 
@@ -12,9 +12,17 @@ Mindloom is designed for:
 - **Desktop and mobile use** — the same Expo app can run in browsers/PWA, Electron desktop wrappers, Android, and iOS.
 - **Privacy-conscious AI assistance** — use the managed assistant or connect your own provider key.
 
-Mindloom is currently **local-first**. Notes and AI preferences persist on the current device. Cloud sync, backup, multi-user workspaces, and store publishing require additional production setup.
+The website is the canonical account-backed experience. Notes are scoped to the signed-in account and synchronized through the Mindloom API. The native app still keeps local-first behavior while the website foundation is completed.
 
-## 2. Getting started
+## 2. Accounts and privacy
+
+The website uses one email address and one password per Mindloom account. It does not require Google, Microsoft, Apple, or any social sign-in.
+
+Create an account from the welcome screen with a name, email, and password of at least eight characters. After registration or sign-in, Mindloom sets an HttpOnly signed session cookie. The server resolves the account before allowing synchronized notes or source-grounded AI requests. Signing out clears both the legacy session and the native Mindloom session.
+
+Every synchronized note query is filtered by the authenticated user ID. AI source context is resolved on the server from the current account's notes; the browser cannot ask the protected AI route to read another account's notes by changing note IDs.
+
+## 3. Getting started
 
 ### Browser or desktop
 
@@ -43,7 +51,7 @@ pnpm dlx eas-cli build --platform android --profile preview
 pnpm dlx eas-cli build --platform all --profile production
 ```
 
-## 3. Notes library
+## 4. Notes library
 
 The **Notes** screen is the main workspace.
 
@@ -79,7 +87,7 @@ Tags are shown on note cards and inside the editor. You can add explicit tags th
 
 Hashtags are normalized to lowercase and merged with explicit tags when the note is saved.
 
-## 4. Note editor
+## 5. Note editor
 
 The editor includes:
 
@@ -103,7 +111,7 @@ Read this alongside [[Design system]] and [[Reading list]].
 
 The link target is matched against another note's title, case-insensitively. Valid links become graph edges and backlinks.
 
-## 5. Knowledge graph
+## 6. Knowledge graph
 
 Open **Graph** from the desktop rail, mobile tab bar, or the **Open graph** chip in the Notes screen.
 
@@ -116,9 +124,9 @@ Open **Graph** from the desktop rail, mobile tab bar, or the **Open graph** chip
 
 The current graph layout is intentionally calm and readable. A future graph release can add zooming, pan gestures, filtering, clustering, and force-directed positioning.
 
-## 6. AI assistant
+## 7. AI assistant
 
-AI is available from the sparkle button inside a note. Mindloom supports two routes.
+AI is available from the sparkle button inside a note and from the **Ask Mindloom** panel in the desktop workspace. Mindloom supports managed writing actions and a protected source-grounded question route.
 
 ### Managed Mindloom AI
 
@@ -140,6 +148,10 @@ Managed actions:
 | **Outline**   | Converts the note into headings and concise bullets while preserving useful specifics. |
 
 AI results are shown in an assistant panel. Select **Insert into note** to append the result to the current note; Mindloom never silently overwrites the note body.
+
+### Ask Mindloom from sources
+
+The desktop workspace sends a question plus selected note IDs to the protected `ai.ask` procedure. The server loads those notes for the current account, truncates oversized source content, asks the configured managed model, and returns a response with source markers. A question without selected notes is rejected with a recoverable prompt to select sources.
 
 ### Bring your own key
 
@@ -169,7 +181,7 @@ Provider keys are written through Expo SecureStore under a Mindloom-specific key
 - AI output is not automatically treated as fact. Review it before inserting it into a note.
 - Never commit provider keys, `.env` files, or store credentials to GitHub.
 
-## 7. Settings
+## 8. Settings
 
 The Settings screen controls the AI writing partner.
 
@@ -181,7 +193,7 @@ The Settings screen controls the AI writing partner.
 
 The app does not currently include a global cloud account switch, sync controls, export/import UI, or billing settings.
 
-## 8. Storage and privacy
+## 9. Storage and privacy
 
 ### Local data
 
@@ -211,7 +223,7 @@ mindloom.ai.ollama.key
 - Ollama traffic is sent to the configured local endpoint.
 - The app should be given a production HTTPS API base URL before public distribution.
 
-## 9. Desktop and PWA use
+## 10. Desktop and PWA use
 
 The responsive shell uses a desktop navigation rail on wider screens and a bottom tab bar on mobile-sized screens. The desktop wrapper loads the static Expo web export into Electron.
 
@@ -231,7 +243,7 @@ Expected desktop outputs:
 
 Desktop signing and notarization are not included by default. Configure signing credentials before public release.
 
-## 10. GitHub deployment
+## 11. GitHub deployment
 
 The repository contains three workflows:
 
