@@ -14,6 +14,7 @@ const MAPPING = {
   search: "search",
   add: "add",
   sparkles: "auto-awesome",
+  "arrow.up.right": "north-east",
   pin: "push-pin",
   "pin-outline": "push-pin",
   more: "more-horiz",

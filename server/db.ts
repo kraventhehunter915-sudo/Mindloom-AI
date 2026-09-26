@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertNote, InsertUser, notes, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,69 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createNativeUser(input: {
+  email: string;
+  name: string;
+  passwordHash: string;
+  passwordSalt: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const openId = `mindloom:${input.email}`;
+  await db.insert(users).values({
+    openId,
+    email: input.email,
+    name: input.name,
+    passwordHash: input.passwordHash,
+    passwordSalt: input.passwordSalt,
+    loginMethod: "mindloom-email",
+    lastSignedIn: new Date(),
+  });
+  return getUserByOpenId(openId);
+}
+
+export async function updateUserLastSignedIn(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, id));
+}
+
+export async function listNotesByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notes).where(eq(notes.userId, userId)).orderBy(desc(notes.pinned), desc(notes.updatedAt));
+}
+
+export async function upsertNoteForUser(userId: number, input: Omit<InsertNote, "userId" | "id">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  const existing = await db.select().from(notes).where(and(eq(notes.userId, userId), eq(notes.noteId, input.noteId))).limit(1);
+  if (existing[0]) {
+    await db.update(notes).set({ ...input, updatedAt: new Date() }).where(eq(notes.id, existing[0].id));
+    return { ...existing[0], ...input, updatedAt: new Date() };
+  }
+  await db.insert(notes).values({ ...input, userId });
+  const created = await db.select().from(notes).where(and(eq(notes.userId, userId), eq(notes.noteId, input.noteId))).limit(1);
+  return created[0];
+}
+
+export async function deleteNoteForUser(userId: number, noteId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is not available");
+  await db.delete(notes).where(and(eq(notes.userId, userId), eq(notes.noteId, noteId)));
+  return { success: true } as const;
+}

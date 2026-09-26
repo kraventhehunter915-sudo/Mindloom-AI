@@ -30,6 +30,7 @@ type NotesContextValue = {
   getNote: (id: string) => Note | undefined;
   getBacklinks: (title: string) => Note[];
   getOutgoingLinks: (content: string) => string[];
+  replaceNotes: (items: Note[]) => void;
 };
 
 const NOTES_KEY = "mindloom.notes.v1";
@@ -39,8 +40,7 @@ const starterNotes: Note[] = [
   {
     id: "welcome",
     title: "Welcome to Mindloom",
-    content:
-      "A quiet place for connected thinking.\n\nTry linking ideas with [[Design system]] or [[Reading list]]. Add #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
+    content: "A quiet place for connected thinking.\n\nTry linking ideas with [[Design system]] or [[Reading list]]. Add #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
     tags: ["welcome", "guide"],
     folder: "Getting started",
     pinned: true,
@@ -50,8 +50,7 @@ const starterNotes: Note[] = [
   {
     id: "design-system",
     title: "Design system",
-    content:
-      "A small visual language for Mindloom: warm paper, ink, and a single green accent.\n\nPrinciples\n- Make capture feel immediate\n- Keep AI actions close to the cursor\n- Prefer calm hierarchy over chrome\n\nSee also: [[Welcome to Mindloom]] and [[Reading list]]",
+    content: "A small visual language for Mindloom: warm paper, ink, and a single green accent.\n\nPrinciples\n- Make capture feel immediate\n- Keep AI actions close to the cursor\n- Prefer calm hierarchy over chrome\n\nSee also: [[Welcome to Mindloom]] and [[Reading list]]",
     tags: ["product", "design"],
     folder: "Projects",
     pinned: false,
@@ -61,8 +60,7 @@ const starterNotes: Note[] = [
   {
     id: "reading-list",
     title: "Reading list",
-    content:
-      "Books and essays to return to.\n\n- The Art of Memory\n- Ways of Seeing\n- Designing for Focus\n\nThe common thread is attention as a design material. This connects back to [[Design system]].",
+    content: "Books and essays to return to.\n\n- The Art of Memory\n- Ways of Seeing\n- Designing for Focus\n\nThe common thread is attention as a design material. This connects back to [[Design system]].",
     tags: ["reading", "ideas"],
     folder: "Inbox",
     pinned: false,
@@ -161,8 +159,12 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const getNote = useCallback((id: string) => notes.find((note) => note.id === id), [notes]);
   const getBacklinks = useCallback((title: string) => notes.filter((note) => extractLinks(note.content).some((link) => link.toLowerCase() === title.toLowerCase())), [notes]);
   const getOutgoingLinks = useCallback((content: string) => extractLinks(content), []);
+  const replaceNotes = useCallback((items: Note[]) => {
+    setNotes(sortNotes(items));
+    setIsHydrated(true);
+  }, []);
 
-  const value = useMemo(() => ({ notes, aiSettings, isHydrated, createNote, updateNote, deleteNote, togglePin, setAISettings, getNote, getBacklinks, getOutgoingLinks }), [notes, aiSettings, isHydrated, createNote, updateNote, deleteNote, togglePin, setAISettings, getNote, getBacklinks, getOutgoingLinks]);
+  const value = useMemo(() => ({ notes, aiSettings, isHydrated, createNote, updateNote, deleteNote, togglePin, setAISettings, getNote, getBacklinks, getOutgoingLinks, replaceNotes }), [notes, aiSettings, isHydrated, createNote, updateNote, deleteNote, togglePin, setAISettings, getNote, getBacklinks, getOutgoingLinks, replaceNotes]);
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
 }
 
