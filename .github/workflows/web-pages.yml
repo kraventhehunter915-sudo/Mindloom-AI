@@ -32,7 +32,10 @@ jobs:
           node -e "const fs=require('fs'); const p='node_modules/react-native-css-interop/.cache/web.css'; fs.mkdirSync(require('path').dirname(p), { recursive: true }); fs.closeSync(fs.openSync(p, 'a'));"
       - run: pnpm exec expo export --platform web
         env:
-          EXPO_PUBLIC_API_BASE_URL: ${{ vars.MINDLOOM_API_BASE_URL }}
+          # GitHub Pages is static; keep the configured variable preferred, but
+          # use the active Mindloom API fallback when repository variables are
+          # unavailable to the limited GitHub connector.
+          EXPO_PUBLIC_API_BASE_URL: ${{ vars.MINDLOOM_API_BASE_URL || 'https://3000-if7xnw10pib2xcw2jny42-651fc53f.sg2.manus.computer' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

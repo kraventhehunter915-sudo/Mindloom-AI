@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -22,6 +22,15 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
     retry: false,
     staleTime: 30_000,
   });
+  const [authWaitExpired, setAuthWaitExpired] = useState(false);
+  useEffect(() => {
+    if (!meQuery.isLoading) {
+      setAuthWaitExpired(false);
+      return;
+    }
+    const timer = setTimeout(() => setAuthWaitExpired(true), 12_000);
+    return () => clearTimeout(timer);
+  }, [meQuery.isLoading]);
   const register = trpc.auth.register.useMutation({
     onSuccess: () => utils.auth.me.invalidate(),
   });
@@ -41,13 +50,30 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
     [mode],
   );
 
-  if (meQuery.isLoading) {
+  if (meQuery.isLoading && !authWaitExpired) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.muted }]}>
           Opening your private space…
         </Text>
+      </View>
+    );
+  }
+  if (authWaitExpired && meQuery.isLoading) {
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.foreground }]}>Unable to reach your private space.</Text>
+        <Text style={[styles.loadingHint, { color: colors.muted }]}>Check the connection and reload Mindloom.</Text>
+        <Pressable
+          onPress={() => {
+            setAuthWaitExpired(false);
+            void meQuery.refetch();
+          }}
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}
+        >
+          <Text style={styles.retryText}>Try again</Text>
+        </Pressable>
       </View>
     );
   }
@@ -264,7 +290,10 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  loadingText: { fontSize: 13 },
+  loadingText: { fontSize: 13, textAlign: "center" },
+  loadingHint: { fontSize: 12, textAlign: "center", marginTop: 4 },
+  retryButton: { minHeight: 42, paddingHorizontal: 18, borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  retryText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   page: {
     flex: 1,
     minHeight: "100%",
