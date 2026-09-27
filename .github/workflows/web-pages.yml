@@ -36,6 +36,7 @@ jobs:
           # use the active Mindloom API fallback when repository variables are
           # unavailable to the limited GitHub connector.
           EXPO_PUBLIC_API_BASE_URL: ${{ vars.MINDLOOM_API_BASE_URL || 'https://3000-if7xnw10pib2xcw2jny42-651fc53f.sg2.manus.computer' }}
+          EXPO_PUBLIC_GITHUB_PAGES: "1"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

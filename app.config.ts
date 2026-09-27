@@ -123,6 +123,8 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+    baseUrl:
+      process.env.EXPO_PUBLIC_GITHUB_PAGES === "1" ? "/Mindloom-AI" : undefined,
   },
 };
 
