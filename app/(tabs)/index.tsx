@@ -112,7 +112,7 @@ function MiniNav({
 }: {
   active?: boolean;
   label: string;
-  icon: "note.text" | "share" | "settings";
+    icon: "note.text" | "library" | "share" | "settings";
   onPress: () => void;
 }) {
   const colors = useColors();
@@ -373,6 +373,11 @@ export default function HomeScreen() {
               label="Notes"
               icon="note.text"
               onPress={() => router.replace("/")}
+            />
+            <MiniNav
+              label="Sources"
+              icon="library"
+              onPress={() => router.push("/sources")}
             />
             <MiniNav
               label="Graph"

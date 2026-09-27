@@ -124,7 +124,20 @@ Open **Graph** from the desktop rail, mobile tab bar, or the **Open graph** chip
 
 The current graph layout is intentionally calm and readable. A future graph release can add zooming, pan gestures, filtering, clustering, and force-directed positioning.
 
-## 7. AI assistant
+## 7. Source Library
+
+Open **Sources** from the desktop rail or mobile tab bar to build a notebook source shelf.
+
+- Import **PDF**, **TXT**, Markdown, CSV, JSON, images, and other local files up to 8 MB.
+- Save public **HTTP/HTTPS web links** as source references.
+- Filter the library by source type.
+- Open saved web links in a new browser tab.
+- Remove sources from the local library at any time.
+- Text files are stored with extracted text locally; PDFs and images are currently stored as source records and previews where supported.
+
+This is the first source-library wave. The next wave will connect selected sources directly to AI context, add previews for PDFs, and support source-to-note conversion.
+
+## 8. AI assistant
 
 AI is available from the sparkle button inside a note and from the **Ask Mindloom** panel in the desktop workspace. Mindloom supports managed writing actions and a protected source-grounded question route.
 
@@ -181,7 +194,7 @@ Provider keys are written through Expo SecureStore under a Mindloom-specific key
 - AI output is not automatically treated as fact. Review it before inserting it into a note.
 - Never commit provider keys, `.env` files, or store credentials to GitHub.
 
-## 8. Settings
+## 9. Settings
 
 The Settings screen controls the AI writing partner.
 
@@ -190,10 +203,11 @@ The Settings screen controls the AI writing partner.
 - **Live catalog** — managed mode can show model IDs returned by the server.
 - **Secure key field** — appears for external providers and uses secure text entry.
 - **Use this setup** — persists the selected provider and model locally.
+- **Appearance** — choose White, Black, or System. The preference persists across reloads.
 
 The app does not currently include a global cloud account switch, sync controls, export/import UI, or billing settings.
 
-## 9. Storage and privacy
+## 10. Storage and privacy
 
 ### Local data
 
@@ -201,6 +215,7 @@ The app stores notes in AsyncStorage under:
 
 - `mindloom.notes.v1`
 - `mindloom.ai-settings.v1`
+- `mindloom.sources.v1`
 
 These keys are implementation details and may change during migrations.
 
@@ -223,7 +238,7 @@ mindloom.ai.ollama.key
 - Ollama traffic is sent to the configured local endpoint.
 - The app should be given a production HTTPS API base URL before public distribution.
 
-## 10. Desktop and PWA use
+## 11. Desktop and PWA use
 
 The responsive shell uses a desktop navigation rail on wider screens and a bottom tab bar on mobile-sized screens. The desktop wrapper loads the static Expo web export into Electron.
 
@@ -243,7 +258,7 @@ Expected desktop outputs:
 
 Desktop signing and notarization are not included by default. Configure signing credentials before public release.
 
-## 11. GitHub deployment
+## 12. GitHub deployment
 
 The repository contains three workflows:
 
@@ -272,7 +287,7 @@ git push origin v0.1.0
 
 Review generated assets before publishing store submissions. The workflows build artifacts; they do not automatically submit apps to the Apple App Store or Google Play.
 
-## 11. Troubleshooting
+## 13. Troubleshooting
 
 ### Notes are not appearing
 
@@ -300,7 +315,7 @@ Verify the deployed API base URL, server health, and managed LLM availability. L
 
 AppImage and tarball packaging can work in a minimal environment. Debian packaging may require Linux packaging utilities such as `ar`; the GitHub Ubuntu runner supplies them. Use the GitHub desktop workflow for reproducible multi-platform artifacts.
 
-## 12. Roadmap
+## 14. Roadmap
 
 Planned improvements include:
 

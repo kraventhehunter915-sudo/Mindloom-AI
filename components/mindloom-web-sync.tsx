@@ -19,11 +19,16 @@ export function MindloomWebSync({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!web || !remote.isSuccess || remoteApplied.current) return;
-    const items = remote.data as Note[];
+    const items = (remote.data as Note[]).filter((note) => note.id !== "design-system" && note.id !== "reading-list");
+    for (const legacyId of ["design-system", "reading-list"]) {
+      if ((remote.data as Note[]).some((note) => note.id === legacyId)) {
+        void remove.mutateAsync({ id: legacyId }).catch(() => undefined);
+      }
+    }
     lastSynced.current = new Map(items.map((note) => [note.id, note]));
     remoteApplied.current = true;
     replaceNotes(items);
-  }, [remote.data, remote.isSuccess, replaceNotes, web]);
+  }, [remote.data, remote.isSuccess, remove, replaceNotes, web]);
 
   useEffect(() => {
     if (!web || !remoteApplied.current) return;

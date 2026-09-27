@@ -39,33 +39,13 @@ const AI_KEY = "mindloom.ai-settings.v1";
 const starterNotes: Note[] = [
   {
     id: "welcome",
-    title: "Welcome to Mindloom",
+    title: "Welcome to Mindloom AI",
     content: "A quiet place for connected thinking.\n\nTry linking ideas with [[Design system]] or [[Reading list]]. Add #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
     tags: ["welcome", "guide"],
     folder: "Getting started",
     pinned: true,
     createdAt: "2026-09-20T10:00:00.000Z",
     updatedAt: "2026-09-23T09:20:00.000Z",
-  },
-  {
-    id: "design-system",
-    title: "Design system",
-    content: "A small visual language for Mindloom: warm paper, ink, and a single green accent.\n\nPrinciples\n- Make capture feel immediate\n- Keep AI actions close to the cursor\n- Prefer calm hierarchy over chrome\n\nSee also: [[Welcome to Mindloom]] and [[Reading list]]",
-    tags: ["product", "design"],
-    folder: "Projects",
-    pinned: false,
-    createdAt: "2026-09-21T08:45:00.000Z",
-    updatedAt: "2026-09-22T16:30:00.000Z",
-  },
-  {
-    id: "reading-list",
-    title: "Reading list",
-    content: "Books and essays to return to.\n\n- The Art of Memory\n- Ways of Seeing\n- Designing for Focus\n\nThe common thread is attention as a design material. This connects back to [[Design system]].",
-    tags: ["reading", "ideas"],
-    folder: "Inbox",
-    pinned: false,
-    createdAt: "2026-09-22T11:15:00.000Z",
-    updatedAt: "2026-09-23T08:05:00.000Z",
   },
 ];
 
@@ -101,7 +81,10 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
         if (storedNotes) {
           try {
             const parsed = JSON.parse(storedNotes) as Note[];
-            if (Array.isArray(parsed) && parsed.length > 0) setNotes(sortNotes(parsed));
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const migrated = parsed.filter((note) => note.id !== "design-system" && note.id !== "reading-list");
+              setNotes(sortNotes(migrated));
+            }
           } catch {
             // Keep the curated starter notes when storage is malformed.
           }

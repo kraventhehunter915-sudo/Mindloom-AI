@@ -9,6 +9,7 @@ import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { NotesProvider } from "@/lib/notes-context";
+import { SourcesProvider } from "@/lib/sources-context";
 import { SafeAreaFrameContext, SafeAreaInsetsContext, SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
@@ -54,7 +55,9 @@ export default function RootLayout() {
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <NotesProvider>
-            {Platform.OS === "web" ? <MindloomAuthGate><MindloomWebSync>{stack}</MindloomWebSync></MindloomAuthGate> : stack}
+            <SourcesProvider>
+              {Platform.OS === "web" ? <MindloomAuthGate><MindloomWebSync>{stack}</MindloomWebSync></MindloomAuthGate> : stack}
+            </SourcesProvider>
           </NotesProvider>
           <StatusBar style="auto" />
         </QueryClientProvider>

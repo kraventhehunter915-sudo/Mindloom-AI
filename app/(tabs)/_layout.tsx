@@ -22,6 +22,7 @@ export default function TabLayout() {
       tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
     }}>
       <Tabs.Screen name="index" options={{ title: "Notes", tabBarIcon: ({ color }) => <IconSymbol size={23} name="note.text" color={color} /> }} />
+      <Tabs.Screen name="sources" options={{ title: "Sources", tabBarIcon: ({ color }) => <IconSymbol size={23} name="library" color={color} /> }} />
       <Tabs.Screen name="graph" options={{ title: "Graph", tabBarIcon: ({ color }) => <IconSymbol size={23} name="share" color={color} /> }} />
       <Tabs.Screen name="settings" options={{ title: "Settings", tabBarIcon: ({ color }) => <IconSymbol size={23} name="settings" color={color} /> }} />
     </Tabs>
