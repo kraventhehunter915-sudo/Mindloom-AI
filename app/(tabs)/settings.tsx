@@ -4,6 +4,8 @@ import * as SecureStore from "expo-secure-store";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useThemePreference } from "@/hooks/use-color-scheme";
+import type { ThemePreference } from "@/constants/theme";
 import { useNotes, type AISettings } from "@/lib/notes-context";
 import { trpc } from "@/lib/trpc";
 
@@ -17,6 +19,7 @@ const providers: { id: AISettings["provider"]; label: string; detail: string; de
 
 export default function SettingsScreen() {
   const colors = useColors();
+  const { themePreference, setThemePreference } = useThemePreference();
   const { aiSettings, setAISettings } = useNotes();
   const [selectedProvider, setSelectedProvider] = useState(aiSettings.provider);
   const [model, setModel] = useState(aiSettings.model);
@@ -50,6 +53,33 @@ export default function SettingsScreen() {
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}><View><Text style={[styles.eyebrow, { color: colors.primary }]}>PERSONALIZE YOUR SPACE</Text><Text style={[styles.heading, { color: colors.foreground }]}>Settings</Text></View><View style={[styles.avatar, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="settings" size={20} color={colors.primary} /></View></View>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Appearance</Text>
+        <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose the canvas that feels right. System follows your device preference and updates automatically.</Text>
+        <View style={[styles.appearanceCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.appearanceOptions}>
+            {([
+              ["light", "White", "sunny"],
+              ["dark", "Black", "moon"],
+              ["system", "System", "settings"],
+            ] as const).map(([value, label, icon]) => {
+              const active = themePreference === value;
+              return (
+                <Pressable
+                  key={value}
+                  onPress={() => setThemePreference(value as ThemePreference)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={({ pressed }) => [styles.appearanceOption, { borderColor: active ? colors.primary : colors.border, backgroundColor: active ? `${colors.primary}12` : colors.background }, pressed && styles.pressed]}
+                >
+                  <IconSymbol name={icon as "sunny" | "moon" | "settings"} size={16} color={active ? colors.primary : colors.muted} />
+                  <Text style={[styles.appearanceLabel, { color: active ? colors.primary : colors.foreground }]}>{label}</Text>
+                  {active && <View style={[styles.appearanceDot, { backgroundColor: colors.primary }]} />}
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[styles.appearanceHint, { color: colors.muted }]}>{themePreference === "system" ? "Following your device appearance" : themePreference === "light" ? "White canvas with soft ink" : "Black canvas with low-glare contrast"}</Text>
+        </View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>AI assistant</Text>
           <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose how Mindloom helps you think. The managed assistant works immediately; provider keys are stored on-device in the secure keychain.</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -79,6 +109,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: "700", marginBottom: 6 },
   sectionIntro: { fontSize: 13, lineHeight: 20, marginBottom: 15 },
   card: { borderWidth: 1, borderRadius: 18, overflow: "hidden", marginBottom: 14 },
+  appearanceCard: { borderWidth: 1, borderRadius: 18, padding: 12, marginBottom: 22 },
+  appearanceOptions: { flexDirection: "row", gap: 8 },
+  appearanceOption: { flex: 1, minHeight: 58, borderWidth: 1, borderRadius: 13, alignItems: "center", justifyContent: "center", gap: 5, position: "relative" },
+  appearanceLabel: { fontSize: 11, fontWeight: "800" },
+  appearanceDot: { width: 5, height: 5, borderRadius: 3, position: "absolute", top: 7, right: 7 },
+  appearanceHint: { fontSize: 11, marginTop: 10, textAlign: "center" },
   cardHeader: { flexDirection: "row", alignItems: "center", padding: 15 },
   aiIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   cardHeaderCopy: { flex: 1, marginLeft: 10 },

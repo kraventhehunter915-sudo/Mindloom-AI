@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import themeConfig from "@/theme.config";
 
 export type ColorScheme = "light" | "dark";
+export type ThemePreference = ColorScheme | "system";
 
 export const ThemeColors = themeConfig.themeColors;
 

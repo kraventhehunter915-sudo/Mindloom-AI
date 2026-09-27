@@ -1,19 +1,23 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Appearance, View, useColorScheme as useSystemColorScheme } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { SchemeColors, type ColorScheme } from "@/constants/theme";
+import { SchemeColors, type ColorScheme, type ThemePreference } from "@/constants/theme";
 
 type ThemeContextValue = {
   colorScheme: ColorScheme;
-  setColorScheme: (scheme: ColorScheme) => void;
+  themePreference: ThemePreference;
+  setColorScheme: (scheme: ThemePreference) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+const THEME_PREFERENCE_KEY = "mindloom.theme-preference.v1";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
+  const [themePreference, setThemePreference] = useState<ThemePreference>("system");
+  const colorScheme: ColorScheme = themePreference === "system" ? systemScheme : themePreference;
 
   const applyScheme = useCallback((scheme: ColorScheme) => {
     nativewindColorScheme.set(scheme);
@@ -29,10 +33,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setColorScheme = useCallback((scheme: ColorScheme) => {
-    setColorSchemeState(scheme);
-    applyScheme(scheme);
-  }, [applyScheme]);
+  const setColorScheme = useCallback((preference: ThemePreference) => {
+    setThemePreference(preference);
+    void AsyncStorage.setItem(THEME_PREFERENCE_KEY, preference);
+  }, []);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(THEME_PREFERENCE_KEY).then((stored) => {
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        setThemePreference(stored);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     applyScheme(colorScheme);
@@ -57,12 +69,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       colorScheme,
+      themePreference,
       setColorScheme,
     }),
-    [colorScheme, setColorScheme],
+    [colorScheme, themePreference, setColorScheme],
   );
-  console.log(value, themeVariables)
-
   return (
     <ThemeContext.Provider value={value}>
       <View style={[{ flex: 1 }, themeVariables]}>{children}</View>
