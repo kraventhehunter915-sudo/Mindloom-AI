@@ -150,9 +150,13 @@ function AIWorkspace({
   onOpenSettings: () => void;
 }) {
   const colors = useColors();
-  const [prompt, setPrompt] = useState(
-    "What themes keep appearing in my notes?",
-  );
+  const promptTools = [
+    ["Overview", "What are the main themes across these notes?"],
+    ["Study guide", "Create a concise study guide with key ideas, definitions, and review points."],
+    ["Key questions", "What important questions do these notes raise, and what evidence answers them?"],
+    ["Timeline", "Build a chronological timeline from the events and dates in these notes."],
+  ] as const;
+  const [prompt, setPrompt] = useState<string>(promptTools[0][1]);
   const ask = trpc.ai.ask.useMutation();
   const askMindloom = () =>
     ask.mutate({
@@ -195,6 +199,24 @@ function AIWorkspace({
         <Text style={[styles.aiPromptLabel, { color: colors.primary }]}>
           TRY ASKING
         </Text>
+        <View style={styles.promptTools}>
+          {promptTools.map(([label, value]) => (
+            <Pressable
+              key={label}
+              onPress={() => setPrompt(value)}
+              style={({ pressed }) => [
+                styles.promptTool,
+                {
+                  backgroundColor: prompt === value ? `${colors.primary}18` : colors.surface,
+                  borderColor: prompt === value ? `${colors.primary}55` : colors.border,
+                },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.promptToolText, { color: prompt === value ? colors.primary : colors.muted }]}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
         <TextInput
           value={prompt}
           onChangeText={setPrompt}
@@ -249,12 +271,11 @@ function AIWorkspace({
             CURRENT SOURCES
           </Text>
           <Text style={[styles.sourceCount, { color: colors.primary }]}>
-            3 notes
+            {notes.length} {notes.length === 1 ? "note" : "notes"}
           </Text>
         </View>
-        {["Welcome to Mindloom", "Design system", "Reading list"].map(
-          (source, index) => (
-            <View key={source} style={styles.sourceRow}>
+        {notes.slice(0, 3).map((note, index) => (
+            <View key={note.id} style={styles.sourceRow}>
               <View
                 style={[
                   styles.sourceNumber,
@@ -271,12 +292,11 @@ function AIWorkspace({
                 style={[styles.sourceName, { color: colors.foreground }]}
                 numberOfLines={1}
               >
-                {source}
+                {note.title}
               </Text>
               <IconSymbol name="chevron.right" size={14} color={colors.muted} />
             </View>
-          ),
-        )}
+          ))}
       </View>
       <Pressable
         onPress={onOpenSettings}
@@ -768,8 +788,11 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.1,
     fontWeight: "800",
-    marginBottom: 7,
+    marginBottom: 9,
   },
+  promptTools: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 9 },
+  promptTool: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 6 },
+  promptToolText: { fontSize: 10, fontWeight: "700" },
   aiPrompt: { fontSize: 14, lineHeight: 20, fontWeight: "600" },
   aiPromptInput: { fontSize: 13, lineHeight: 19, minHeight: 42, padding: 0 },
   askButton: {
