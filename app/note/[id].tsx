@@ -45,7 +45,10 @@ export default function NoteEditorScreen() {
     setAiOutput("");
     if (aiSettings.provider !== "managed") {
       try {
-        const apiKey = await SecureStore.getItemAsync(`mindloom.ai.${aiSettings.provider}.key`);
+        const storageKey = `mindloom.ai.${aiSettings.provider}.key`;
+        const apiKey = Platform.OS === "web"
+          ? window.localStorage.getItem(storageKey)
+          : await SecureStore.getItemAsync(storageKey);
         if (!apiKey) throw new Error("No provider key saved");
         const text = await runExternalAssistant({ ...aiSettings, apiKey, action, title, content });
         setAiOutput(text.trim() || "The provider returned an empty response.");

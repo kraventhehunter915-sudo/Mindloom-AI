@@ -40,7 +40,7 @@ const starterNotes: Note[] = [
   {
     id: "welcome",
     title: "Welcome to Mindloom AI",
-    content: "A quiet place for connected thinking.\n\nTry linking ideas with [[Design system]] or [[Reading list]]. Add #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
+    content: "A quiet place for connected thinking.\n\nAdd #tags anywhere in a note and use the Graph tab to see how your thoughts connect.\n\nThe assistant can summarize, continue, or suggest structure without leaving your note.",
     tags: ["welcome", "guide"],
     folder: "Getting started",
     pinned: true,
@@ -143,7 +143,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const getBacklinks = useCallback((title: string) => notes.filter((note) => extractLinks(note.content).some((link) => link.toLowerCase() === title.toLowerCase())), [notes]);
   const getOutgoingLinks = useCallback((content: string) => extractLinks(content), []);
   const replaceNotes = useCallback((items: Note[]) => {
-    setNotes(sortNotes(items));
+    setNotes(sortNotes(items.length > 0 ? items : starterNotes));
     setIsHydrated(true);
   }, []);
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -25,7 +26,9 @@ export default function SettingsScreen() {
   const [model, setModel] = useState(aiSettings.model);
   const [apiKey, setApiKey] = useState("");
   const [keySaved, setKeySaved] = useState(false);
-  const modelsQuery = trpc.ai.models.useQuery(undefined, { retry: false, staleTime: 1000 * 60 * 10 });
+  const [keyError, setKeyError] = useState("");
+  const isFocused = useIsFocused();
+  const modelsQuery = trpc.ai.models.useQuery(undefined, { enabled: isFocused && selectedProvider === "managed", retry: false, refetchOnWindowFocus: false, staleTime: 1000 * 60 * 10 });
   const managedModels = useMemo(() => modelsQuery.data?.models?.slice(0, 5) ?? [], [modelsQuery.data]);
 
   useEffect(() => {
@@ -38,15 +41,27 @@ export default function SettingsScreen() {
     setSelectedProvider(provider);
     setModel(provider === aiSettings.provider ? aiSettings.model : next.defaultModel);
     setKeySaved(false);
+    setKeyError("");
   };
 
   const saveSettings = () => setAISettings({ provider: selectedProvider, model: model.trim() || "auto", apiKeyLabel: apiKey ? "Stored securely" : aiSettings.apiKeyLabel });
   const saveKey = async () => {
     if (!apiKey.trim() || selectedProvider === "managed") return;
-    await SecureStore.setItemAsync(`mindloom.ai.${selectedProvider}.key`, apiKey.trim());
-    setApiKey("");
-    setKeySaved(true);
-    saveSettings();
+    const storageKey = `mindloom.ai.${selectedProvider}.key`;
+    try {
+      if (Platform.OS === "web") {
+        window.localStorage.setItem(storageKey, apiKey.trim());
+      } else {
+        await SecureStore.setItemAsync(storageKey, apiKey.trim());
+      }
+      setApiKey("");
+      setKeySaved(true);
+      setKeyError("");
+      saveSettings();
+    } catch {
+      setKeySaved(false);
+      setKeyError("This browser or device blocked secure key storage. You can still use Mindloom AI without a provider key.");
+    }
   };
 
   return (
@@ -87,10 +102,10 @@ export default function SettingsScreen() {
           {providers.map((provider) => <Pressable key={provider.id} onPress={() => selectProvider(provider.id)} style={({ pressed }) => [styles.providerRow, { borderTopColor: colors.border }, pressed && styles.pressed]}><View style={[styles.radio, { borderColor: selectedProvider === provider.id ? colors.primary : colors.border }]}>{selectedProvider === provider.id && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}</View><View style={styles.providerCopy}><Text style={[styles.providerLabel, { color: colors.foreground }]}>{provider.label}</Text><Text style={[styles.providerDetail, { color: colors.muted }]}>{provider.detail}</Text></View>{provider.id === "managed" && <Text style={[styles.recommended, { color: colors.primary }]}>Recommended</Text>}</Pressable>)}
         </View>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.fieldLabelRow}><Text style={[styles.fieldLabel, { color: colors.foreground }]}>Model</Text>{selectedProvider === "managed" && (modelsQuery.isFetching ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={[styles.liveLabel, { color: colors.success }]}>Live catalog</Text>)}</View>
+          <View style={styles.fieldLabelRow}><Text style={[styles.fieldLabel, { color: colors.foreground }]}>Model</Text>{selectedProvider === "managed" && (modelsQuery.isFetching ? <ActivityIndicator size="small" color={colors.primary} /> : modelsQuery.isError ? <Text style={[styles.liveLabel, { color: colors.muted }]}>Auto model</Text> : <Text style={[styles.liveLabel, { color: colors.success }]}>Live catalog</Text>)}</View>
           <TextInput value={model} onChangeText={setModel} onBlur={saveSettings} placeholder="auto" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]} autoCapitalize="none" />
           {selectedProvider === "managed" && managedModels.length > 0 && <View style={styles.modelChips}>{managedModels.map((item) => <Pressable key={item.id} onPress={() => { setModel(item.id); setAISettings({ provider: "managed", model: item.id }); }} style={({ pressed }) => [styles.modelChip, { backgroundColor: `${colors.primary}12` }, pressed && styles.pressed]}><Text style={[styles.modelChipText, { color: colors.primary }]}>{item.id}</Text></Pressable>)}</View>}
-          {selectedProvider !== "managed" && <><Text style={[styles.fieldHint, { color: colors.muted }]}>API key</Text><View style={styles.keyRow}><TextInput value={apiKey} onChangeText={setApiKey} placeholder={aiSettings.apiKeyLabel ?? "Paste a key (stored securely)"} placeholderTextColor={colors.muted} style={[styles.input, styles.keyInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]} secureTextEntry autoCapitalize="none" /><Pressable onPress={saveKey} style={({ pressed }) => [styles.saveKey, { backgroundColor: colors.primary }, pressed && styles.pressed]}><Text style={styles.saveKeyText}>Save</Text></Pressable></View>{keySaved && <Text style={[styles.savedText, { color: colors.success }]}>Key stored securely on this device.</Text>}</>}
+          {selectedProvider !== "managed" && <><Text style={[styles.fieldHint, { color: colors.muted }]}>API key</Text><View style={styles.keyRow}><TextInput value={apiKey} onChangeText={setApiKey} placeholder={aiSettings.apiKeyLabel ?? "Paste a key (stored securely)"} placeholderTextColor={colors.muted} style={[styles.input, styles.keyInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]} secureTextEntry autoCapitalize="none" /><Pressable onPress={saveKey} style={({ pressed }) => [styles.saveKey, { backgroundColor: colors.primary }, pressed && styles.pressed]}><Text style={styles.saveKeyText}>Save</Text></Pressable></View>{keySaved && <Text style={[styles.savedText, { color: colors.success }]}>Key stored for this device.</Text>}{!!keyError && <Text style={[styles.savedText, { color: colors.error }]}>{keyError}</Text>}</>}
           <Pressable onPress={saveSettings} style={({ pressed }) => [styles.saveSettings, { backgroundColor: `${colors.primary}12` }, pressed && styles.pressed]}><Text style={[styles.saveSettingsText, { color: colors.primary }]}>Use this setup</Text></Pressable>
         </View>
         <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="lock" size={17} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Mindloom is local-first. Notes are stored on this device, and AI requests are only sent when you tap an assistant action.</Text></View>
