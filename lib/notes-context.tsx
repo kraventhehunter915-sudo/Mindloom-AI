@@ -68,6 +68,17 @@ const mergeTags = (content: string, explicitTags: string[] = []) =>
 const sortNotes = (items: Note[]) =>
   [...items].sort((a, b) => Number(b.pinned) - Number(a.pinned) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
+const isWelcomeNote = (note: Note) => note.id === "welcome" || note.title.trim().toLowerCase() === "welcome to mindloom ai";
+const normalizeNotes = (items: Note[]) => {
+  let welcomeFound = false;
+  return items.filter((note) => {
+    if (!isWelcomeNote(note)) return true;
+    if (welcomeFound) return false;
+    welcomeFound = true;
+    return true;
+  });
+};
+
 const NotesContext = createContext<NotesContextValue | null>(null);
 
 export function NotesProvider({ children }: { children: React.ReactNode }) {
@@ -83,7 +94,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
             const parsed = JSON.parse(storedNotes) as Note[];
             if (Array.isArray(parsed) && parsed.length > 0) {
               const migrated = parsed.filter((note) => note.id !== "design-system" && note.id !== "reading-list");
-              setNotes(sortNotes(migrated));
+              setNotes(sortNotes(normalizeNotes(migrated)));
             }
           } catch {
             // Keep the curated starter notes when storage is malformed.
@@ -143,7 +154,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const getBacklinks = useCallback((title: string) => notes.filter((note) => extractLinks(note.content).some((link) => link.toLowerCase() === title.toLowerCase())), [notes]);
   const getOutgoingLinks = useCallback((content: string) => extractLinks(content), []);
   const replaceNotes = useCallback((items: Note[]) => {
-    setNotes(sortNotes(items.length > 0 ? items : starterNotes));
+    setNotes(sortNotes(normalizeNotes(items.length > 0 ? items : starterNotes)));
     setIsHydrated(true);
   }, []);
 
@@ -165,4 +176,4 @@ export function getPreview(text: string, length = 120) {
   return text.replace(/\[\[([^\]]+)\]\]/g, "$1").replace(/\n+/g, " ").trim().slice(0, length);
 }
 
-export { extractLinks, extractTags };
+export { extractLinks, extractTags, isWelcomeNote, normalizeNotes };

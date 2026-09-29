@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { trpc } from "@/lib/trpc";
-import { useNotes, type Note } from "@/lib/notes-context";
+import { isWelcomeNote, normalizeNotes, useNotes, type Note } from "@/lib/notes-context";
 
 export function MindloomWebSync({ children }: { children: React.ReactNode }) {
   const { notes, replaceNotes } = useNotes();
@@ -19,12 +19,12 @@ export function MindloomWebSync({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!web || !remote.isSuccess || remoteApplied.current) return;
-    const items = (remote.data as Note[]).filter((note) => note.id !== "design-system" && note.id !== "reading-list");
-    for (const legacyId of ["design-system", "reading-list"]) {
-      if ((remote.data as Note[]).some((note) => note.id === legacyId)) {
-        void remove.mutateAsync({ id: legacyId }).catch(() => undefined);
-      }
-    }
+    const remoteItems = remote.data as Note[];
+    const deduped = normalizeNotes(remoteItems.filter((note) => note.id !== "design-system" && note.id !== "reading-list"));
+    const retainedWelcomeId = deduped.find(isWelcomeNote)?.id;
+    const duplicateIds = remoteItems.filter((note) => note.id === "design-system" || note.id === "reading-list" || (isWelcomeNote(note) && note.id !== retainedWelcomeId)).map((note) => note.id);
+    for (const id of duplicateIds) void remove.mutateAsync({ id }).catch(() => undefined);
+    const items = deduped;
     lastSynced.current = new Map(items.map((note) => [note.id, note]));
     remoteApplied.current = true;
     replaceNotes(items);
