@@ -30,10 +30,12 @@ function NoteCard({
   note,
   onPress,
   onPin,
+  onDelete,
 }: {
   note: Note;
   onPress: () => void;
   onPin: () => void;
+  onDelete: () => void;
 }) {
   const colors = useColors();
   return (
@@ -65,6 +67,17 @@ function NoteCard({
             size={17}
             color={note.pinned ? colors.primary : colors.muted}
           />
+        </Pressable>
+        <Pressable
+          onPress={(event) => {
+            event.stopPropagation();
+            onDelete();
+          }}
+          hitSlop={10}
+          accessibilityLabel={`Delete ${note.title}`}
+          style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+        >
+          <IconSymbol name="delete" size={17} color={colors.muted} />
         </Pressable>
       </View>
       <Text
@@ -321,7 +334,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const desktop = Platform.OS === "web" && width >= 1100;
-  const { notes, createNote, togglePin, isHydrated } = useNotes();
+  const { notes, createNote, togglePin, deleteNote, isHydrated } = useNotes();
   const [query, setQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const filteredNotes = useMemo(() => {
@@ -522,6 +535,7 @@ export default function HomeScreen() {
                   })
                 }
                 onPin={() => togglePin(item.id)}
+                onDelete={() => deleteNote(item.id)}
               />
             )}
             contentContainerStyle={styles.listContent}
