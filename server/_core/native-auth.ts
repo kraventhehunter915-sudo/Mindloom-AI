@@ -48,17 +48,25 @@ export async function createNativeSession(user: User) {
     .sign(secret());
 }
 
-export async function getNativeUserId(req: Request) {
+export async function getNativeSession(req: Request) {
   const cookies = parse(req.headers.cookie ?? "");
   const token = cookies[MINDLOOM_SESSION_COOKIE];
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret());
     if (payload.type !== "mindloom" || !payload.sub) return null;
-    return Number(payload.sub);
+    return {
+      userId: Number(payload.sub),
+      issuedAt: typeof payload.iat === "number" ? payload.iat : 0,
+    };
   } catch {
     return null;
   }
+}
+
+export async function getNativeUserId(req: Request) {
+  const session = await getNativeSession(req);
+  return session?.userId ?? null;
 }
 
 export function sessionCookieOptions(req: Request) {

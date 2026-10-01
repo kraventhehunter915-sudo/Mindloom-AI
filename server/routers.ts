@@ -99,9 +99,10 @@ export const appRouter = router({
           sessionCookieOptions(ctx.req),
         );
         return { id: user.id, email: user.email, name: user.name };
-      }),
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
+      if (ctx.user) void updateUserLastSignedIn(ctx.user.id);
       ctx.res.clearCookie(COOKIE_NAME, cookieOptions);
       // Clear both the shared parent-domain cookie and any host-only legacy cookie.
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, domain: undefined });

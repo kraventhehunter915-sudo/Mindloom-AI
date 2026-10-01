@@ -1,8 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { getUserById } from "../db";
-import { getNativeUserId } from "./native-auth";
-import { sdk } from "./sdk";
+import { getNativeSession } from "./native-auth";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -14,12 +13,15 @@ export async function createContext(opts: CreateExpressContextOptions): Promise<
   let user: User | null = null;
 
   try {
-    const nativeUserId = await getNativeUserId(opts.req);
-    if (nativeUserId) {
-      const nativeUser = await getUserById(nativeUserId);
-      user = nativeUser ?? null;
+    const nativeSession = await getNativeSession(opts.req);
+    if (nativeSession) {
+      const nativeUser = await getUserById(nativeSession.userId);
+      const lastSignedIn = nativeUser?.lastSignedIn?.getTime() ?? 0;
+      const issuedAt = nativeSession.issuedAt * 1000;
+      if (nativeUser && issuedAt >= lastSignedIn) {
+        user = nativeUser;
+      }
     }
-    if (!user) user = await sdk.authenticateRequest(opts.req);
   } catch (error) {
     // Authentication is optional for public procedures.
     user = null;
