@@ -35,7 +35,18 @@ const actionPrompts = {
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(({ ctx }) => {
+      const user = ctx.user;
+      if (!user) return null;
+      return {
+        id: user.id,
+        openId: user.openId,
+        name: user.name,
+        email: user.email,
+        loginMethod: user.loginMethod,
+        lastSignedIn: user.lastSignedIn,
+      };
+    }),
     register: publicProcedure
       .input(
         z.object({
@@ -91,7 +102,9 @@ export const appRouter = router({
       }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(COOKIE_NAME, cookieOptions);
+      // Clear both the shared parent-domain cookie and any host-only legacy cookie.
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, domain: undefined });
       clearNativeSession(ctx.res, ctx.req);
       return { success: true } as const;
     }),
