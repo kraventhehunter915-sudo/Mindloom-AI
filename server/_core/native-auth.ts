@@ -81,10 +81,8 @@ export function clearNativeSession(
   },
   req: Request,
 ) {
-  res.clearCookie(MINDLOOM_SESSION_COOKIE, {
-    ...sessionCookieOptions(req),
-    maxAge: -1,
-  });
+  const { maxAge: _maxAge, ...cookieOptions } = sessionCookieOptions(req);
+  res.clearCookie(MINDLOOM_SESSION_COOKIE, cookieOptions);
 }
 
 export function hashSessionForDiagnostics(token: string) {
