@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
@@ -46,7 +47,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const email = normalizeEmail(input.email);
         const existing = await getUserByEmail(email);
-        if (existing) throw new Error("Unable to create this account");
+        if (existing) throw new TRPCError({ code: "BAD_REQUEST", message: "Unable to create this account" });
         const { hash, salt } = hashPassword(input.password);
         const user = await createNativeUser({
           email,
@@ -54,7 +55,7 @@ export const appRouter = router({
           passwordHash: hash,
           passwordSalt: salt,
         });
-        if (!user) throw new Error("Unable to create this account");
+        if (!user) throw new TRPCError({ code: "BAD_REQUEST", message: "Unable to create this account" });
         const token = await createNativeSession(user);
         ctx.res.cookie(
           MINDLOOM_SESSION_COOKIE,
@@ -77,7 +78,7 @@ export const appRouter = router({
           !user.passwordSalt ||
           !verifyPassword(input.password, user.passwordHash, user.passwordSalt)
         ) {
-          throw new Error("Email or password is incorrect");
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Email or password is incorrect" });
         }
         await updateUserLastSignedIn(user.id);
         const token = await createNativeSession(user);
