@@ -11,13 +11,10 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useColors } from "@/hooks/use-colors";
-import { useThemePreference } from "@/hooks/use-color-scheme";
 import { trpc } from "@/lib/trpc";
-import * as Auth from "@/lib/_core/auth";
 
 export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
   const colors = useColors();
-  const { themePreference, setThemePreference } = useThemePreference();
   const { width } = useWindowDimensions();
   const compact = width < 760;
   const utils = trpc.useUtils();
@@ -46,20 +43,12 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
   const busy = register.isPending || login.isPending;
-  const rawMutationError = register.error?.message || login.error?.message || "";
-  const mutationError = /failed to fetch|network request failed|load failed/i.test(rawMutationError)
-    ? "Mindloom could not reach the account server. Check your connection and try again."
-    : /email or password is incorrect/i.test(rawMutationError)
-      ? "Email or password is incorrect."
-      : rawMutationError;
+  const mutationError = register.error?.message || login.error?.message || "";
   const errorText = formError || mutationError;
   const title = useMemo(
     () => (mode === "login" ? "Welcome back" : "Create your space"),
     [mode],
   );
-  useEffect(() => {
-    void Auth.clearUserInfo();
-  }, []);
 
   if (meQuery.isLoading && !authWaitExpired) {
     return (
@@ -172,26 +161,6 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
             compact && styles.compactCard,
           ]}
         >
-          <View style={styles.authThemeRow}>
-            {(["light", "dark", "system"] as const).map((preference) => (
-              <Pressable
-                key={preference}
-                onPress={() => setThemePreference(preference)}
-                accessibilityLabel={`${preference} theme`}
-                style={[
-                  styles.authThemeButton,
-                  {
-                    backgroundColor: themePreference === preference ? `${colors.primary}18` : "transparent",
-                    borderColor: themePreference === preference ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <Text style={[styles.authThemeText, { color: themePreference === preference ? colors.primary : colors.muted }]}>
-                  {preference === "light" ? "White" : preference === "dark" ? "Black" : "System"}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
           <Text style={[styles.eyebrow, { color: colors.primary }]}>
             PRIVATE KNOWLEDGE SPACE
           </Text>
@@ -270,11 +239,6 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
               }
               onSubmitEditing={submit}
             />
-            <Text style={[styles.passwordHint, { color: colors.muted }]}>
-              {mode === "register"
-                ? "Use 8+ characters. Mindloom stores a one-way verification hash, never your password."
-                : "Your password is checked privately; Mindloom never reveals account or password hints."}
-            </Text>
           </View>
           {!!errorText && (
             <Text style={[styles.error, { color: colors.error }]}>
@@ -433,7 +397,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     fontSize: 14,
   },
-  passwordHint: { fontSize: 10, lineHeight: 14, marginTop: 2 },
   error: { fontSize: 12, lineHeight: 17, marginBottom: 12 },
   submit: {
     minHeight: 48,
@@ -454,7 +417,4 @@ const styles = StyleSheet.create({
   switchText: { fontSize: 12 },
   switchAction: { fontSize: 12, fontWeight: "800" },
   privacy: { fontSize: 10, lineHeight: 15, textAlign: "center", marginTop: 22 },
-  authThemeRow: { flexDirection: "row", justifyContent: "flex-end", gap: 6, marginBottom: 14 },
-  authThemeButton: { borderWidth: 1, borderRadius: 9, minHeight: 28, paddingHorizontal: 9, alignItems: "center", justifyContent: "center" },
-  authThemeText: { fontSize: 10, fontWeight: "800" },
 });

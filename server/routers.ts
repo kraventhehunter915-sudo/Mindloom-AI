@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
@@ -36,6 +35,7 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(({ ctx }) => {
+      ctx.res.setHeader("Cache-Control", "no-store, private");
       const user = ctx.user;
       if (!user) return null;
       return {
@@ -58,7 +58,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const email = normalizeEmail(input.email);
         const existing = await getUserByEmail(email);
-        if (existing) throw new TRPCError({ code: "BAD_REQUEST", message: "Unable to create this account" });
+        if (existing) throw new Error("Unable to create this account");
         const { hash, salt } = hashPassword(input.password);
         const user = await createNativeUser({
           email,
@@ -66,7 +66,7 @@ export const appRouter = router({
           passwordHash: hash,
           passwordSalt: salt,
         });
-        if (!user) throw new TRPCError({ code: "BAD_REQUEST", message: "Unable to create this account" });
+        if (!user) throw new Error("Unable to create this account");
         const token = await createNativeSession(user);
         ctx.res.cookie(
           MINDLOOM_SESSION_COOKIE,
@@ -89,7 +89,7 @@ export const appRouter = router({
           !user.passwordSalt ||
           !verifyPassword(input.password, user.passwordHash, user.passwordSalt)
         ) {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Email or password is incorrect" });
+          throw new Error("Email or password is incorrect");
         }
         await updateUserLastSignedIn(user.id);
         const token = await createNativeSession(user);
@@ -99,12 +99,11 @@ export const appRouter = router({
           sessionCookieOptions(ctx.req),
         );
         return { id: user.id, email: user.email, name: user.name };
-    }),
-    logout: publicProcedure.mutation(({ ctx }) => {
+      }),
+    logout: publicProcedure.mutation(async ({ ctx }) => {
+      if (ctx.user) await updateUserLastSignedIn(ctx.user.id);
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      if (ctx.user) void updateUserLastSignedIn(ctx.user.id);
       ctx.res.clearCookie(COOKIE_NAME, cookieOptions);
-      // Clear both the shared parent-domain cookie and any host-only legacy cookie.
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, domain: undefined });
       clearNativeSession(ctx.res, ctx.req);
       return { success: true } as const;

@@ -18,9 +18,7 @@ export async function createContext(opts: CreateExpressContextOptions): Promise<
       const nativeUser = await getUserById(nativeSession.userId);
       const lastSignedIn = nativeUser?.lastSignedIn?.getTime() ?? 0;
       const issuedAt = nativeSession.issuedAt * 1000;
-      if (nativeUser && issuedAt >= lastSignedIn) {
-        user = nativeUser;
-      }
+      if (nativeUser && issuedAt >= lastSignedIn) user = nativeUser;
     }
   } catch (error) {
     // Authentication is optional for public procedures.
