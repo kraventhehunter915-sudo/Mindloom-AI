@@ -34,7 +34,19 @@ const actionPrompts = {
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(({ ctx }) => {
+      ctx.res.setHeader("Cache-Control", "no-store, private");
+      const user = ctx.user;
+      if (!user) return null;
+      return {
+        id: user.id,
+        openId: user.openId,
+        name: user.name,
+        email: user.email,
+        loginMethod: user.loginMethod,
+        lastSignedIn: user.lastSignedIn,
+      };
+    }),
     register: publicProcedure
       .input(
         z.object({
@@ -88,9 +100,11 @@ export const appRouter = router({
         );
         return { id: user.id, email: user.email, name: user.name };
       }),
-    logout: publicProcedure.mutation(({ ctx }) => {
+    logout: publicProcedure.mutation(async ({ ctx }) => {
+      if (ctx.user) await updateUserLastSignedIn(ctx.user.id);
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(COOKIE_NAME, cookieOptions);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, domain: undefined });
       clearNativeSession(ctx.res, ctx.req);
       return { success: true } as const;
     }),
