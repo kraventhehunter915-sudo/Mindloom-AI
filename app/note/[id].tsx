@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { getWordCount, useNotes } from "@/lib/notes-context";
 import { runExternalAssistant } from "@/lib/ai-providers";
 import { trpc } from "@/lib/trpc";
+import { getProviderKey } from "@/lib/provider-key-vault";
 
 const actionLabels = { summarize: "Summarize", continue: "Continue", outline: "Outline" } as const;
 type Action = keyof typeof actionLabels;
@@ -45,10 +45,7 @@ export default function NoteEditorScreen() {
     setAiOutput("");
     if (aiSettings.provider !== "managed") {
       try {
-        const storageKey = `mindloom.ai.${aiSettings.provider}.key`;
-        const apiKey = Platform.OS === "web"
-          ? window.localStorage.getItem(storageKey)
-          : await SecureStore.getItemAsync(storageKey);
+        const apiKey = await getProviderKey(aiSettings.provider);
         if (!apiKey) throw new Error("No provider key saved");
         const text = await runExternalAssistant({ ...aiSettings, apiKey, action, title, content });
         setAiOutput(text.trim() || "The provider returned an empty response.");

@@ -15,6 +15,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { getPreview, useNotes, type Note } from "@/lib/notes-context";
+import { useSources, type Source } from "@/lib/sources-context";
 import { trpc } from "@/lib/trpc";
 
 const formatDate = (date: string) => {
@@ -157,9 +158,11 @@ function MiniNav({
 
 function AIWorkspace({
   notes,
+  sources,
   onOpenSettings,
 }: {
   notes: Note[];
+  sources: Source[];
   onOpenSettings: () => void;
 }) {
   const colors = useColors();
@@ -175,6 +178,12 @@ function AIWorkspace({
     ask.mutate({
       prompt,
       noteIds: notes.slice(0, 8).map((note) => note.id),
+      sources: sources.slice(0, 8).map((source) => ({
+        name: source.name,
+        kind: source.kind,
+        content: source.content?.slice(0, 12000),
+        url: source.url,
+      })),
       model: "auto",
     });
   return (
@@ -238,7 +247,7 @@ function AIWorkspace({
         />
         <Pressable
           onPress={askMindloom}
-          disabled={ask.isPending || notes.length === 0}
+          disabled={ask.isPending || (notes.length === 0 && sources.length === 0)}
           style={({ pressed }) => [
             styles.askButton,
             { backgroundColor: colors.primary },
@@ -247,7 +256,7 @@ function AIWorkspace({
           ]}
         >
           <Text style={styles.askButtonText}>
-            {ask.isPending ? "Thinking…" : "Ask from these notes"}
+            {ask.isPending ? "Thinking…" : "Ask from this context"}
           </Text>
           <IconSymbol name="paperplane.fill" size={14} color="#FFFFFF" />
         </Pressable>
@@ -284,11 +293,14 @@ function AIWorkspace({
             CURRENT SOURCES
           </Text>
           <Text style={[styles.sourceCount, { color: colors.primary }]}>
-            {notes.length} {notes.length === 1 ? "note" : "notes"}
+            {notes.length + sources.length} {notes.length + sources.length === 1 ? "source" : "sources"}
           </Text>
         </View>
-        {notes.slice(0, 3).map((note, index) => (
-            <View key={note.id} style={styles.sourceRow}>
+        {[
+          ...notes.slice(0, 3).map((note) => ({ id: note.id, title: note.title })),
+          ...sources.slice(0, Math.max(0, 3 - notes.length)).map((source) => ({ id: source.id, title: source.name })),
+        ].map((source, index) => (
+            <View key={source.id} style={styles.sourceRow}>
               <View
                 style={[
                   styles.sourceNumber,
@@ -305,7 +317,7 @@ function AIWorkspace({
                 style={[styles.sourceName, { color: colors.foreground }]}
                 numberOfLines={1}
               >
-                {note.title}
+                {source.title}
               </Text>
               <IconSymbol name="chevron.right" size={14} color={colors.muted} />
             </View>
@@ -335,6 +347,7 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const desktop = Platform.OS === "web" && width >= 1100;
   const { notes, createNote, togglePin, deleteNote, isHydrated } = useNotes();
+  const { sources } = useSources();
   const [query, setQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const filteredNotes = useMemo(() => {
@@ -556,6 +569,7 @@ export default function HomeScreen() {
           <View style={styles.aiColumn}>
             <AIWorkspace
               notes={notes}
+              sources={sources}
               onOpenSettings={() => router.push("/settings")}
             />
             <View

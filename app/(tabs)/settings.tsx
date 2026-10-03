@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
-import * as SecureStore from "expo-secure-store";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -9,6 +9,7 @@ import { useThemePreference } from "@/hooks/use-color-scheme";
 import type { ThemePreference } from "@/constants/theme";
 import { useNotes, type AISettings } from "@/lib/notes-context";
 import { trpc } from "@/lib/trpc";
+import { saveProviderKey } from "@/lib/provider-key-vault";
 
 const providers: { id: AISettings["provider"]; label: string; detail: string; defaultModel: string }[] = [
   { id: "managed", label: "Mindloom AI", detail: "Managed, private, no key required", defaultModel: "auto" },
@@ -44,16 +45,11 @@ export default function SettingsScreen() {
     setKeyError("");
   };
 
-  const saveSettings = () => setAISettings({ provider: selectedProvider, model: model.trim() || "auto", apiKeyLabel: apiKey ? "Stored securely" : aiSettings.apiKeyLabel });
+  const saveSettings = () => setAISettings({ provider: selectedProvider, model: model.trim() || "auto", apiKeyLabel: apiKey ? (Platform.OS === "web" ? "Available this browser session" : "Stored in device keychain") : aiSettings.apiKeyLabel });
   const saveKey = async () => {
     if (!apiKey.trim() || selectedProvider === "managed") return;
-    const storageKey = `mindloom.ai.${selectedProvider}.key`;
     try {
-      if (Platform.OS === "web") {
-        window.localStorage.setItem(storageKey, apiKey.trim());
-      } else {
-        await SecureStore.setItemAsync(storageKey, apiKey.trim());
-      }
+      await saveProviderKey(selectedProvider, apiKey.trim());
       setApiKey("");
       setKeySaved(true);
       setKeyError("");
@@ -96,7 +92,7 @@ export default function SettingsScreen() {
           <Text style={[styles.appearanceHint, { color: colors.muted }]}>{themePreference === "system" ? "Following your device appearance" : themePreference === "light" ? "White canvas with soft ink" : "Black canvas with low-glare contrast"}</Text>
         </View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>AI assistant</Text>
-          <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose how Mindloom helps you think. The managed assistant works immediately; provider keys are stored on-device in the secure keychain.</Text>
+          <Text style={[styles.sectionIntro, { color: colors.muted }]}>Choose how Mindloom helps you think. The managed assistant works immediately. Native provider keys use the device keychain; web keys stay in memory for this tab and are never persisted.</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}><View style={[styles.aiIcon, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="sparkles" size={19} color={colors.primary} /></View><View style={styles.cardHeaderCopy}><Text style={[styles.cardTitle, { color: colors.foreground }]}>Writing partner</Text><Text style={[styles.cardCaption, { color: colors.muted }]}>{providers.find((provider) => provider.id === selectedProvider)?.detail}</Text></View><View style={[styles.statusDot, { backgroundColor: colors.success }]} /></View>
           {providers.map((provider) => <Pressable key={provider.id} onPress={() => selectProvider(provider.id)} style={({ pressed }) => [styles.providerRow, { borderTopColor: colors.border }, pressed && styles.pressed]}><View style={[styles.radio, { borderColor: selectedProvider === provider.id ? colors.primary : colors.border }]}>{selectedProvider === provider.id && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}</View><View style={styles.providerCopy}><Text style={[styles.providerLabel, { color: colors.foreground }]}>{provider.label}</Text><Text style={[styles.providerDetail, { color: colors.muted }]}>{provider.detail}</Text></View>{provider.id === "managed" && <Text style={[styles.recommended, { color: colors.primary }]}>Recommended</Text>}</Pressable>)}

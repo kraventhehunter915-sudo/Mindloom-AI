@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Line, Text as SvgText } from "react-native-svg";
 import { ScreenContainer } from "@/components/screen-container";
@@ -21,7 +21,8 @@ export default function GraphScreen() {
   const router = useRouter();
   const { notes } = useNotes();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const width = Math.min(Dimensions.get("window").width - 40, 520);
+  const { width: viewportWidth } = useWindowDimensions();
+  const width = Math.max(280, Math.min(viewportWidth - 40, 720));
   const height = 400;
   const nodes = useMemo(() => notes.map((note, index) => ({ ...note, x: width * (positions[index % positions.length].x), y: height * positions[index % positions.length].y })), [notes, width]);
   const edges = useMemo(() => nodes.flatMap((node) => extractLinks(node.content).map((title) => {
@@ -43,6 +44,7 @@ export default function GraphScreen() {
         </View>
       </View>
       <Text style={[styles.intro, { color: colors.muted }]}>Every [[link]] becomes a thread. Tap a node to follow an idea.</Text>
+      {notes.length === 0 ? <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="share" size={22} color={colors.primary} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>Your map is ready to grow</Text><Text style={[styles.emptyText, { color: colors.muted }]}>Create a note, then connect it with [[another note]] to see a thread here.</Text></View> : <>
       <View style={[styles.graphCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Svg width={width} height={height}>
           {edges.map((edge, index) => edge && <Line key={`${edge.from.id}-${edge.to.id}-${index}`} x1={edge.from.x} y1={edge.from.y} x2={edge.to.x} y2={edge.to.y} stroke={colors.border} strokeWidth={1.5} strokeDasharray="4 5" />)}
@@ -55,6 +57,7 @@ export default function GraphScreen() {
       {selected ? <Pressable onPress={() => router.push({ pathname: "/note/[id]", params: { id: selected.id } })} style={({ pressed }) => [styles.selectedCard, { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}42` }, pressed && styles.pressed]}>
         <View style={styles.selectedCopy}><Text style={[styles.selectedEyebrow, { color: colors.primary }]}>SELECTED NOTE</Text><Text style={[styles.selectedTitle, { color: colors.foreground }]}>{selected.title}</Text><Text style={[styles.selectedMeta, { color: colors.muted }]}>{extractLinks(selected.content).length} outgoing links · {selected.tags.length} tags</Text></View><IconSymbol name="chevron.right" size={20} color={colors.primary} />
       </Pressable> : <View style={[styles.tipCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="sparkles" size={18} color={colors.primary} /><Text style={[styles.tip, { color: colors.muted }]}>Add a [[link]] in any note to grow your map.</Text></View>}
+      </>}
     </ScreenContainer>
   );
 }
@@ -80,5 +83,8 @@ const styles = StyleSheet.create({
   selectedMeta: { fontSize: 12, marginTop: 4 },
   tipCard: { borderWidth: 1, borderRadius: 17, padding: 15, flexDirection: "row", gap: 9, alignItems: "center" },
   tip: { fontSize: 13, flex: 1, lineHeight: 19 },
+  emptyCard: { borderWidth: 1, borderRadius: 17, padding: 24, alignItems: "center" },
+  emptyTitle: { fontSize: 16, fontWeight: "800", marginTop: 10 },
+  emptyText: { fontSize: 13, lineHeight: 19, textAlign: "center", maxWidth: 300, marginTop: 6 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
 });

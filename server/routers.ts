@@ -171,6 +171,12 @@ export const appRouter = router({
         z.object({
           prompt: z.string().trim().min(1).max(4000),
           noteIds: z.array(z.string().max(80)).max(20),
+          sources: z.array(z.object({
+            name: z.string().max(255),
+            kind: z.enum(["pdf", "text", "image", "link", "file"]),
+            content: z.string().max(12000).optional(),
+            url: z.string().url().max(2048).optional(),
+          })).max(8).optional(),
           model: z.string().max(255).optional(),
         }),
       )
@@ -179,17 +185,24 @@ export const appRouter = router({
         const selected = allNotes.filter((note) =>
           input.noteIds.includes(note.noteId),
         );
-        if (selected.length === 0)
+        const imported = input.sources ?? [];
+        if (selected.length === 0 && imported.length === 0)
           return {
-            text: "Select at least one note so Mindloom has a source to work from.",
+            text: "Add a note or imported source so Mindloom has context to work from.",
             sources: [],
           };
-        const sourceContext = selected
+        const noteContext = selected
           .map(
             (note, index) =>
               `[${index + 1}] ${note.title}\n${note.content.slice(0, 12000)}`,
           )
           .join("\n\n");
+        const importedContext = imported.map((source, index) => {
+          const marker = selected.length + index + 1;
+          const detail = source.content?.trim() || source.url || `Imported ${source.kind} without extracted text`;
+          return `[${marker}] ${source.name}\n${detail.slice(0, 12000)}`;
+        }).join("\n\n");
+        const sourceContext = [noteContext, importedContext].filter(Boolean).join("\n\n");
         const response = await invokeLLM({
           model:
             input.model && input.model !== "auto" ? input.model : undefined,
@@ -217,11 +230,10 @@ export const appRouter = router({
           text:
             text.trim() ||
             "Mindloom could not produce an answer from those sources.",
-          sources: selected.map((note, index) => ({
-            index: index + 1,
-            id: note.noteId,
-            title: note.title,
-          })),
+          sources: [
+            ...selected.map((note, index) => ({ index: index + 1, id: note.noteId, title: note.title })),
+            ...imported.map((source, index) => ({ index: selected.length + index + 1, id: `source:${source.name}`, title: source.name })),
+          ],
         };
       }),
     assist: publicProcedure

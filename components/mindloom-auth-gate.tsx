@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { AccountScopeProvider } from "@/lib/account-scope";
 
 export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
   const colors = useColors();
@@ -77,7 +78,7 @@ export function MindloomAuthGate({ children }: { children: React.ReactNode }) {
       </View>
     );
   }
-  if (meQuery.data) return <>{children}</>;
+  if (meQuery.data) return <AccountScopeProvider scope={`account-${meQuery.data.id}`}>{children}</AccountScopeProvider>;
 
   const submit = () => {
     setFormError("");
