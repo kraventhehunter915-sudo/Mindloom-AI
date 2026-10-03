@@ -30,36 +30,23 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  const configuredOrigins = new Set(
-    (process.env.MINDLOOM_ALLOWED_ORIGINS ?? "")
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  );
-  configuredOrigins.add("https://kraventhehunter915-sudo.github.io");
-  const isAllowedOrigin = (origin: string) =>
-    configuredOrigins.has(origin) ||
-    /^https:\/\/8081-[a-z0-9-]+\.sg2\.manus\.computer$/.test(origin) ||
-    /^http:\/\/localhost:\d+$/.test(origin);
 
+  // Enable CORS for all routes - reflect the request origin to support credentials
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin && isAllowedOrigin(origin)) {
+    if (origin) {
       res.header("Access-Control-Allow-Origin", origin);
-      res.header("Access-Control-Allow-Credentials", "true");
-      res.header("Vary", "Origin");
     }
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept, Authorization",
     );
+    res.header("Access-Control-Allow-Credentials", "true");
+
+    // Handle preflight requests
     if (req.method === "OPTIONS") {
-      if (origin && !isAllowedOrigin(origin)) {
-        res.sendStatus(403);
-      } else {
-        res.sendStatus(204);
-      }
+      res.sendStatus(200);
       return;
     }
     next();
